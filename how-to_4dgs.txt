@@ -1,0 +1,179 @@
+
+
+******************************
+Gaussians4D env: 4dgs
+    later installed:
+        conda install pytorch3d::pytorch3d ------------ surg-gs
+ 
+
+
+        yacs, tabulate, portalocker, iopath, fvcore, pytorch3d
+pre: colmap application:
+    4dgs require colmap application install--it do colmap via nurfstuodio
+    we download the source under /cluster/workspaces/jinjing/appplications; we install it under /home/jinjingxu/local
+
+    ws18 install colmap(completely as jinjingxu):  during colmap install: https://colmap.github.io/install.html
+    apt-get isntall sth on ws18 as mediassist: 
+                libfreeimage-dev \
+                libmetis-dev \
+                libgtest-dev \
+                libgmock-dev \
+    git clone colmap src under /mnt/cluster/workspace/jinjingxu/appplications
+    update CMakeLists.txt: set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc) #jj
+    https://github.com/colmap/colmap/issues/2464:  
+        cmake .. -GNinja -DCMAKE_CUDA_ARCHITECTURES=61
+        cmake .. -GNinja -DCMAKE_CUDA_ARCHITECTURES=61  -DCMAKE_INSTALL_PREFIX=/home/jinjingxu/local
+        ninja install
+
+    when locally use colmap do: (later can install meshlab)
+        ssh -X 18
+        export PATH=$PATH:/home/jinjingxu/local/bin
+        colmap gui
+
+
+install nurfstudio for Gaussians4D env:
+    work on ws18:    
+    sudo apt-get install libglm-dev 
+    pip install -e submodules/depth-diff-gaussian-rasterization will need ninja and local cuda:
+        export CUDA_HOME="/usr/local/cuda-11.7"
+    how-to-use:
+
+        to use nurfstudio for colmapping, guranteen:
+            the raw img starts with 1 and be continious(step=1)
+            name format is "frame_zfill(5).png"
+        the command is below:
+            ns-process-data images 
+            ns-process-data videos
+
+        eg:(Gaussians4D) jinjingxu@g27ws0018:/mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians$ 
+        ns-process-data images --data /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw/imgs/ \
+        --output-dir /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw
+
+            fix issue when use nurfstudio runing colmap have issue:
+                    ValueError: could not convert string to float: '3.11.0.dev0'
+                do below for nurfstudio code in the environment file
+                /mnt/cluster/environments/jinjingxu/pkg/envs/Gaussians4D/lib/python3.7/\
+                site-packages/nerfstudio/process_data/colmap_utils.py:
+                    version_str = line.split(" ")[1].split(".dev")[0]
+
+
+
+
+train 4d gs :
+/mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw/transforms.json
+4D viewer online monitor traning(anyviewer---we have 3 versions from :
+    1)naive download to /home/jinjingxu/apps/viewer
+        ssh -X 18
+        wine apps/viewer/bin/SIBR_remoteGaussian_app.exe --port 6017 
+        wine apps/viewer/bin/SIBR_remoteGaussian_app.exe --path /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw/colmap
+        wine apps/viewer/bin/SIBR_remoteGaussian_app.exe --path /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/output/custom/chkpnt_fine_4000.pth 
+        
+        (the .exe file works for windows; to use for linux we need wine)
+    
+    2)build from 3dgs repo and install in /home/jinjingxu/local
+        chmod +x /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/gaussian-splatting/SIBR_viewers/install/bin/SIBR_remoteGaussian_app 
+        ./mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/gaussian-splatting/SIBR_viewers/install/bin/SIBR_remoteGaussian_app --port 6017
+
+    (3)build from gs-monitor repo and install in /home/jinjingxu/local)
+
+    /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/Gaussian-Splatting-Monitor/SIBR_viewers/install/bin/
+ 
+
+ 
+
+build and install GS SIBR viewers for 3DGS repo:
+    build using ws18:
+    mediassist@g27ws0018:/home/jinjingxu$ sudo apt install libglfw3-dev libembree-dev
+    jinjingxu@g27ws0018:/mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/gaussian-splatting/SIBR_viewers/build$ \
+    cmake -Bbuild . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/home/jinjingxu/local \
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc  -G Ninja ..
+
+    how to use:
+
+    previous naive downloading .exe under /home/jinjingxu/apps/viewer/:
+    jinjingxu@g27ws0018:/mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj$ wine /home/jinjingxu/apps/viewer/bin/SIBR_remoteGaussian_app.exe 
+    jinjingxu@g27ws0018:~$ 
+    wine apps/viewer/bin/SIBR_remoteGaussian_app.exe --path /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/output/custom/chkpnt_fine_3000.pth
+    jinjingxu@g27ws0018:~$ 
+
+ 
+
+
+    #////////////////////////example//////////////////////////
+    train 4d gaussians on our own:
+    run nurfstudio:  !!we later observe nerfstudio require frameid to be consistent for properly work!
+    cp the objective resolution img to the colmap dir
+    do traning
+
+    (Gaussians4D) jinjingxu@g27ws0018:/mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians$ 
+    ns-process-data images --data /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw/imgs/ \
+    --output-dir /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw
+
+    (Gaussians4D) jinjingxu@g27ws0018:/mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians$ 
+    python train.py -s /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/4DGaussians/toy_data/SM/fc0_1_raw/colmap --port 6017
+    
+    #//////////////////////////////////////////////////
+    online monitor slow down training a lot!!!
+    *1/8 img size is okish; be even smaller?
+    vis gaussians(we use the complied version from 3dgs repo--look correct and have dynamics already!, 
+    rather the downloaded version suggested by 4dgs---looks wrong):
+    ssh -X 18
+    vis how-to is in above
+ 
+
+
+
+
+
+
+
+ ////////////////////liwen related//////////////////////////
+
+
+# PYTHONPATH='.'  python train.py -s data/endonerf/pulling_soft_tissues --port 6017 --expname "endonerf/pulling" --configs arguments/endonerf.py 
+# PYTHONPATH='/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS'  python train.py -s /mnt/cluster/datasets/DynaKITTI_clean/endonerf/pulling_soft_tissues --expname "endonerf1/pulling" --configs arguments/endonerf.py 
+# PYTHONPATH='/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS'  python train.py -s /mnt/cluster/datasets/DynaKITTI_clean/SCARED/training/dataset_1/keyframe_1 --expname "scared/dataset1_keyframe1" --configs arguments/scared.py 
+
+# -------------------For dataset
+#  python train.py -s /mnt/cluster/datasets/DynaKITTI_clean/endonerf/pulling_soft_tissues --expname "endonerf1/pulling2" --configs arguments/endonerf.py 
+#  python train.py -s /mnt/cluster/datasets/DynaKITTI_clean/SCARED/training/dataset_1/keyframe_1 --expname "scared2/dataset1_keyframe1" --configs arguments/scared.py 
+#  python train.py -s /mnt/cluster/datasets/DynaKITTI_clean/StereoMIS/Liwen_test --expname "Scared_test" --configs arguments/stereomis.py 
+
+
+
+
+
+# ['/mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS', '/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python38.zip', '/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8', '/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.
+# 8/lib-dynload', '/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8/site-packages', 
+# '/mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/submodules/diff_gaussian_rasterization_depth', 
+# '/mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/sub
+# modules/simple-knn', '/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8/site-packages/setuptools/_vendor']
+
+
+# Add the required paths to PYTHONPATH
+export PYTHONPATH="/mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS:\
+/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python38.zip:\
+/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8:\
+/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8/lib-dynload:\
+/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8/site-packages:\
+/mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/submodules/diff_gaussian_rasterization_depth:\
+/mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/submodules/simple-knn:\
+/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/lib/python3.8/site-packages/setuptools/_vendor:$PYTHONPATH"
+
+# Optional: Print PYTHONPATH to confirm
+echo "PYTHONPATH is now: $PYTHONPATH"
+
+# /mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/bin/python
+
+# /mnt/cluster/environments/jinjingxu/pkg/envs/end_pose_dbg/bin/python \
+/mnt/cluster/environments/liuliwen/miniconda3/envs/Endo4DGS/bin/python /mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/train.py \
+-s /mnt/ceph/tco/TCO-All/SharedDatasets/StereoMIS/P2_8 \
+--expname /mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/output/StereoMIS/exp_long_sequence/fixed_notool_bowel/P2_8_3094-3244 \
+--port 6021 --configs /mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/arguments/stereomis.py \
+--excel --depth_source depth_anything 
+
+
+
+# ImportError: /mnt/ceph/tco/TCO-Students/Homes/liwenliu/projs/3D_reconstruction_rp/Endo-4DGS/submodules/diff_gaussian_rasterization_depth/diff_gaussian_rasterization_depth/_C.cpython-38-x86_64-linux-gnu.so: undefined symbol: _ZNK3c107SymBool10guard_boolEPKcl
+# solution: change port
+

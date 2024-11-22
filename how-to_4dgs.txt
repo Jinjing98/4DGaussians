@@ -74,7 +74,7 @@ train 4d gs :
         chmod +x /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/gaussian-splatting/SIBR_viewers/install/bin/SIBR_remoteGaussian_app 
         ./mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/gaussian-splatting/SIBR_viewers/install/bin/SIBR_remoteGaussian_app --port 6017
 
-    (3)build from gs-monitor repo and install in /home/jinjingxu/local)
+    (3)build from gs-monitor repo(under /mnt/ceph/tco/TCO-Staff/Homes/jinjing/applications) and install in /home/jinjingxu/local)
 
     /mnt/ceph/tco/TCO-Staff/Homes/jinjing/proj/gs/Gaussian-Splatting-Monitor/SIBR_viewers/install/bin/
  

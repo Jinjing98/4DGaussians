@@ -8,7 +8,7 @@ tensorboard_3d
 screenshots
 data/
 data
-submodules/
+# submodules/
 
 toy_data/
 

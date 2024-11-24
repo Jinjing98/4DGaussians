@@ -624,7 +624,26 @@ def readMultipleViewinfos(datadir,llffhold=8):
         
     except:
         pcd = None
-    
+
+
+    #///////////////
+    debug_rand_pcd = True
+    if debug_rand_pcd:
+        # Since asculap contains little colmap data, we start with random points
+        num_pts = 2000
+        print(f"Generating random point cloud ({num_pts})...")
+
+        # We create random points inside the bounds of the synthetic Blender scenes
+        xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3
+        shs = np.random.random((num_pts, 3)) / 255.0
+        pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
+
+
+
+
+
+
+
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,

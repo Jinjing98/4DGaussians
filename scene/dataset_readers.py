@@ -626,9 +626,11 @@ def readMultipleViewinfos(datadir,llffhold=8):
         pcd = None
 
 
-    #///////////////
+    #///////////jj////
     debug_rand_pcd = True
+    debug_rand_pcd = False
     if debug_rand_pcd:
+        assert 0, 'u sure?'
         # Since asculap contains little colmap data, we start with random points
         num_pts = 2000
         print(f"Generating random point cloud ({num_pts})...")
